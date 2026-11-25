@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 export abstract class AppPageBase {
   isDarkMode=localStorage.getItem('dtyTheme')!=='light';
@@ -14,7 +14,7 @@ export abstract class AppPageBase {
   private applyTheme(){document.documentElement.dataset.theme=this.isDarkMode?'dark':'light';document.querySelector('meta[name="theme-color"]')?.setAttribute('content',this.isDarkMode?'#0b1011':'#f5f7f4');}
   submitContact(){if(this.contactLoading)return;this.contactLoading=true;this.contactStatus='';this.contactError=false;this.http.post('/api/inquiries',this.contact).subscribe({next:()=>{this.contactStatus='Thank you. Your enquiry has been submitted successfully.';this.contact={name:'',company:'',email:'',phone:'',service:'',message:''};this.contactLoading=false;},error:()=>{this.contactStatus='We could not submit your enquiry right now. Please email sales@dtyedidyah.com.';this.contactError=true;this.contactLoading=false;}});}
   adminLogin(){this.adminLoading=true;this.adminError='';this.http.post<any>('/api/admin/login',{username:this.adminUser,password:this.adminPassword}).subscribe({next:r=>{this.adminToken=r.token;localStorage.setItem('dtyAdminToken',r.token);this.adminLoading=false;this.loadAdminData();},error:()=>{this.adminError='Invalid credentials or server unavailable.';this.adminLoading=false;}});}
-  loadAdminData(){this.http.get<any[]>('/api/admin/inquiries',{headers:{Authorization:`Bearer ${this.adminToken}`}}).subscribe({next:r=>this.inquiries=r,error:()=>{this.logoutAdmin();this.adminError='Session expired. Please sign in again.';}});}
+  loadAdminData(){this.adminError='';this.http.get<any[]>('/api/admin/inquiries',{headers:{Authorization:`Bearer ${this.adminToken}`}}).subscribe({next:r=>this.inquiries=r,error:(error:HttpErrorResponse)=>{if(error.status===401){this.logoutAdmin();this.adminError='Session expired. Please sign in again.';return;}if(error.status===403){this.adminError='Your account does not have permission to access admin data. Your session is still active.';return;}this.adminError=error.status===0?'Could not reach the API (network or CORS error). Your session is still active.':`Could not load admin data (HTTP ${error.status}). Your session is still active.`;}});}
   updateStatus(id:string,status:string){this.http.patch('/api/admin/inquiries/'+id,{status},{headers:{Authorization:`Bearer ${this.adminToken}`}}).subscribe({next:()=>this.loadAdminData(),error:()=>alert('Could not update status. Please try again.')});}
   logoutAdmin(){this.adminToken='';localStorage.removeItem('dtyAdminToken');this.inquiries=[];}
   loadBlogCategories(){this.http.get<string[]>('/api/blog/categories').subscribe({next:r=>this.blogCategories=r,error:()=>this.blogCategories=[]});}
