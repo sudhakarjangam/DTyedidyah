@@ -1,1 +1,130 @@
-<div class="admin-shell"><div class="admin-head"><h1>DTYedidyah <small>ADMIN</small></h1><div class="admin-head-links"><a routerLink="/admin/blogs">Blog Management</a><a routerLink="/blog">Public Blog</a><a routerLink="/">← View website</a><button class="theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-pressed]="isDarkMode" [attr.aria-label]="isDarkMode?'Switch to light mode':'Switch to dark mode'"><span aria-hidden="true">{{isDarkMode?'☀':'☾'}}</span><span>{{isDarkMode?'Light mode':'Dark mode'}}</span></button></div></div>@if(!adminToken){<form class="admin-login" (ngSubmit)="adminLogin()"><h2>Admin sign in</h2><label>Username<input name="username" [(ngModel)]="adminUser" required></label><label>Password<input type="password" name="password" [(ngModel)]="adminPassword" required></label><button class="button button-lime" [disabled]="adminLoading">{{adminLoading?'Signing in...':'Sign in'}}</button>@if(adminError){<p class="form-message error">{{adminError}}</p>}</form>}@else {<div class="admin-content"><div class="admin-toolbar"><h2>Enquiries</h2><a class="admin-nav-link" routerLink="/admin/blogs">Blog Management ↗</a><a class="admin-nav-link" routerLink="/blog">View Public Blog ↗</a><button (click)="loadAdminData()">Refresh ↻</button><button (click)="logoutAdmin()">Sign out</button></div>@if(adminError){<p class="form-message error" role="alert">{{adminError}}</p>}<div class="admin-stats"><div><small>Total enquiries</small><strong>{{inquiries.length}}</strong></div><div><small>New</small><strong>{{newCount}}</strong></div><div><small>In progress</small><strong>{{progressCount}}</strong></div></div><div class="admin-table-wrap"><table><thead><tr><th>Received</th><th>Name / Company</th><th>Contact</th><th>Service</th><th>Message</th><th>Status</th></tr></thead><tbody>@for(item of inquiries;track item.id){<tr><td>{{item.createdAt | date:'mediumDate'}}</td><td>{{item.name}}<small>{{item.company}}</small></td><td>{{item.email}}<small>{{item.phone}}</small></td><td>{{item.service}}</td><td>{{item.message}}</td><td><select [value]="item.status" (change)="updateStatus(item.id,$any($event.target).value)"><option>New</option><option>In Progress</option><option>Completed</option></select></td></tr>}@empty{<tr><td colspan="6">No enquiries received yet.</td></tr>}</tbody></table></div></div>}</div>
+<div class="admin-shell">
+  <div class="admin-head">
+    <h1>DTYedidyah <small>ADMIN</small></h1>
+    <div class="admin-head-links">
+      <a routerLink="/admin/blogs">Blog Management</a>
+      <a routerLink="/blog">Public Blog</a>
+      <a routerLink="/">← View website</a>
+      <button class="theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-pressed]="isDarkMode" [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+        <span aria-hidden="true">{{isDarkMode ? '☀' : '☾'}}</span>
+        <span>{{isDarkMode ? 'Light mode' : 'Dark mode'}}</span>
+      </button>
+    </div>
+  </div>
+
+  @if (!adminToken) {
+    <form class="admin-login" (ngSubmit)="adminLogin()">
+      <h2>Admin sign in</h2>
+      <label>Username<input name="username" [(ngModel)]="adminUser" required></label>
+      <label>Password<input type="password" name="password" [(ngModel)]="adminPassword" required></label>
+      <button class="button button-lime" [disabled]="adminLoading">{{adminLoading ? 'Signing in...' : 'Sign in'}}</button>
+      @if (adminError) {
+        <p class="form-message error">{{adminError}}</p>
+      }
+    </form>
+  } @else {
+    <div class="admin-content">
+      <div class="admin-toolbar">
+        <h2>{{adminDashboardTab === 'inquiries' ? 'Enquiries' : 'Job vacancies'}}</h2>
+        <button type="button" [attr.aria-pressed]="adminDashboardTab === 'inquiries'" (click)="adminDashboardTab = 'inquiries'; loadAdminData()">Enquiries</button>
+        <button type="button" [attr.aria-pressed]="adminDashboardTab === 'vacancies'" (click)="adminDashboardTab = 'vacancies'; loadVacancies()">Vacancies</button>
+        <a class="admin-nav-link" routerLink="/admin/blogs">Blog Management ↗</a>
+        <a class="admin-nav-link" routerLink="/blog">Public Blog ↗</a>
+        <button type="button" (click)="adminDashboardTab === 'inquiries' ? loadAdminData() : loadVacancies()">Refresh ↻</button>
+        <button type="button" (click)="logoutAdmin()">Sign out</button>
+      </div>
+
+      @if (adminDashboardTab === 'inquiries') {
+        @if (adminError) {
+          <p class="form-message error" role="alert">{{adminError}}</p>
+        }
+        <div class="admin-stats">
+          <div><small>Total enquiries</small><strong>{{inquiries.length}}</strong></div>
+          <div><small>New</small><strong>{{newCount}}</strong></div>
+          <div><small>In progress</small><strong>{{progressCount}}</strong></div>
+        </div>
+        <div class="admin-table-wrap">
+          <table>
+            <thead>
+              <tr><th>Received</th><th>Name / Company</th><th>Contact</th><th>Service</th><th>Message</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              @for (item of inquiries; track item.id) {
+                <tr>
+                  <td>{{item.createdAt | date:'mediumDate'}}</td>
+                  <td>{{item.name}}<small>{{item.company}}</small></td>
+                  <td>{{item.email}}<small>{{item.phone}}</small></td>
+                  <td>{{item.service}}</td>
+                  <td>{{item.message}}</td>
+                  <td>
+                    <select [value]="item.status" (change)="updateStatus(item.id, $any($event.target).value)">
+                      <option>New</option><option>In Progress</option><option>Completed</option>
+                    </select>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6">No enquiries received yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        @if (vacancyError) {
+          <p class="form-message error" role="alert">{{vacancyError}}</p>
+        }
+        <div class="admin-toolbar">
+          <span>{{vacancies.length}} vacancies</span>
+          <button type="button" (click)="newVacancy()">＋ Add vacancy</button>
+        </div>
+
+        @if (vacancyEditorOpen) {
+          <form class="blog-editor" (ngSubmit)="saveVacancy()">
+            <div class="blog-editor-head">
+              <h2>{{vacancyEditingId ? 'Edit vacancy' : 'New vacancy'}}</h2>
+              <button type="button" class="blog-outline" (click)="vacancyEditorOpen = false">Close</button>
+            </div>
+            <div class="blog-editor-grid">
+              <label>Job title *<input name="title" [(ngModel)]="vacancyForm.title" required maxlength="180"></label>
+              <label>Department<input name="department" [(ngModel)]="vacancyForm.department"></label>
+              <label>Location *<input name="location" [(ngModel)]="vacancyForm.location" required></label>
+              <label>Employment type
+                <select name="employmentType" [(ngModel)]="vacancyForm.employmentType">
+                  <option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option><option>Remote</option>
+                </select>
+              </label>
+              <label>Experience<input name="experience" [(ngModel)]="vacancyForm.experience"></label>
+              <label>Closing date<input type="date" name="closingDate" [(ngModel)]="vacancyForm.closingDate"></label>
+              <label>Apply email<input type="email" name="applyEmail" [(ngModel)]="vacancyForm.applyEmail"></label>
+              <label class="blog-publish-check"><input type="checkbox" name="isActive" [(ngModel)]="vacancyForm.isActive"> Active / published</label>
+            </div>
+            <label>Description *<textarea name="description" rows="5" [(ngModel)]="vacancyForm.description" required></textarea></label>
+            <label>Requirements<textarea name="requirements" rows="5" [(ngModel)]="vacancyForm.requirements"></textarea></label>
+            <div class="blog-editor-actions">
+              <button type="submit" class="blog-primary">Save vacancy</button>
+              <button type="button" class="blog-outline" (click)="vacancyEditorOpen = false">Cancel</button>
+            </div>
+          </form>
+        }
+
+        <div class="blog-admin-posts">
+          @for (vacancy of vacancies; track vacancy.id) {
+            <div class="blog-admin-post">
+              <div>
+                <span class="blog-status" [class.published]="vacancy.isActive">{{vacancy.isActive ? 'Active' : 'Hidden'}}</span>
+                <h3>{{vacancy.title}}</h3>
+                <small>{{vacancy.department || 'No department'}} · {{vacancy.location}} · {{vacancy.employmentType}} · {{vacancy.experience || 'Experience not specified'}}</small>
+              </div>
+              <div class="blog-admin-actions">
+                <button type="button" (click)="editVacancy(vacancy)">Edit</button>
+                <button type="button" (click)="toggleVacancy(vacancy)">{{vacancy.isActive ? 'Hide' : 'Activate'}}</button>
+                <button type="button" class="danger" (click)="deleteVacancy(vacancy)">Delete</button>
+              </div>
+            </div>
+          } @empty {
+            <div class="blog-empty">No vacancies yet. Add a vacancy to publish it on the careers page.</div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
