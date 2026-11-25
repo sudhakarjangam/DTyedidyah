@@ -1,1 +1,1 @@
-{ "/api": { "target": "http://dtyadidyah.runasp.net", "secure": false, "changeOrigin": true }, "/health": { "target": "http://dtyadidyah.runasp.net", "secure": false, "changeOrigin": true } }
+{ "/api": { "target": "https://dtyadidyah.runasp.net", "secure": false, "changeOrigin": true }, "/health": { "target": "https://dtyadidyah.runasp.net", "secure": false, "changeOrigin": true } }
